@@ -4,8 +4,8 @@
 #  - Install a directory worth of APKs onto N-attached Android devices via USB
 #  - Flash N-attached Android devices via USB with unlocked bootloader
 #
-# Usage:  primr.py -- Will install all APKs in the directory path hard coded below
-#         primr.py flash -- Will flash using the bootloader and Android OS image hard coded below
+# Usage:  nexus7.py -- Will install all APKs in the directory path hard coded below
+#         nexus7.py flash -- Will flash using the bootloader and Android OS image hard coded below
 #
 #
 # This program is free software: you can redistribute it and/or modify
