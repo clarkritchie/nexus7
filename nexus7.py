@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # A simple script to:
 #  - Install a directory worth of APKs onto N-attached Android devices via USB
@@ -23,21 +23,20 @@
 #
 
 import subprocess, sys, re
-
 from os import listdir
 from os.path import isfile, join
 
-# Paths to update:
+# BEGIN Paths to update:
 # path to adb executable
-adb='/path/to/android-sdk/sdk/platform-tools/adb'
+adb='/usr/local/bin/android-sdk/sdk/platform-tools/adb'
 # path to fastboot executable
-fastboot='/path/to/android-sdk/sdk/platform-tools/fastboot'
+fastboot='/usr/local/bin/android-sdk/sdk/platform-tools/fastboot'
 # path to directory of APK files to install
-apk_files='/path/to/APKs'
+apk_files='/tmp/nexus7/APKs'
 # path to the Android OS image file
-android_image='/path/to/firmware/nakasi-jwr66y-diffbootload/image-nakasi-jwr66y.zip'
-bootloader='/path/to/firmware/nakasi-jwr66y-diffbootload/bootloader-grouper-4.23.img'
-
+android_image='/tmp/nexus7/image-nakasi-jwr66y.zip'
+bootloader='/tmp/nexus7/bootloader-grouper-4.23.img'
+# END Paths to update:
 
 # if the argument is "flash" then flash the device
 flash=False
