@@ -42,48 +42,45 @@ bootloader='/tmp/nexus7/bootloader-grouper-4.23.img'
 # END Paths to update:
 
 def flashTablet( device_id, fastboot, bootloader, android_image ):
-    print("Begin flash of tablet %s", device_id)
-    # for i in xrange(10000000): pass
+    print("Begin flash of tablet %s" % device_id)
+    
     flash_cmds = [
-        '%s -s %s oem unlock' % ( fastboot, device_id ),
-        '%s -s %s erase boot' % ( fastboot, device_id ),
-        '%s -s %s erase cache' % ( fastboot, device_id ),
-        '%s -s %s erase recovery' % ( fastboot, device_id ),
-        '%s -s %s erase system' % ( fastboot, device_id ),
-        '%s -s %s erase userdata' % ( fastboot, device_id ),
-        '%s -s %s flash bootloader %s' % ( fastboot, device_id, bootloader ),
-        '%s -s %s reboot-bootloader' % ( fastboot, device_id ),
-        'sleep 10',
-        '%s -s %s -w update %s' % ( fastboot, device_id, android_image ),
+        [fastboot,"-s",device_id,"oem","unlock"],
+        [fastboot,"-s",device_id,"erase","boot"],
+        [fastboot,"-s",device_id,"erase","cache"],
+        [fastboot,"-s",device_id,"erase","recovery"],
+        [fastboot,"-s",device_id,"erase","system"],
+        [fastboot,"-s",device_id,"erase","userdata"],
+        [fastboot,"-s",device_id,"flash","bootloader",bootloader],
+        ["sleep","10"],
+        [fastboot,"-s",device_id,"reboot-bootloader"],
+        [fastboot,"-s",device_id,"-w","update",android_image]
     ]
+    
+    # 
     for cmd in flash_cmds:
-        print( cmd)
-        p = subprocess.Popen( cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        for line in p.stdout.readlines():
-            print (line)
-        retval = p.wait()
+        print(cmd)
+        # subp = subprocess.Popen( [ fastboot,"-s",device_id,"reboot-bootloader"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+        subp = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+        stdout, stderr = subp.communicate()
+        subp.wait()
+        print(stdout.decode())
+        print(stderr.decode())
         # time.sleep(5)
-        print ('End flash of tablet %s', device_id)
+    print ('End flash of tablet %s' % device_id)
 
 def installAPKs( device_id, apks ):
     print ( 'Begin APK install on tablet %s' % device_id )
     for f in apks:
-        print(f)
-        
-    for f in apks:
         print( 'Installing %s onto %s' % ( f, device_id ))
-        cmd=adb + ' -s '+device_id+" install -r "+f;
-        print(cmd)
+        cmd=adb + ' -s '+device_id+" install -r "+f
+        # print(cmd)
         subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-        stdout, stderr = subp.communicate() 
+        stdout, stderr = subp.communicate()
         subp.wait()
-        print (stdout)
-        # time.sleep(10)
-        print( re.sub("[\t\s\s+]" , " ", stdout ))
-        print( re.sub("[\t\s\s+]" , " ", stderr ))
-        print( subp.returncode )
+        print(stdout.decode())
+        print(stderr.decode())
     print( "End APK install on tablet %s" % device_id )
-    return 0
 
     
 if __name__ == '__main__':
@@ -124,18 +121,14 @@ if __name__ == '__main__':
     
     # setup the pool
     pool = Pool(processes=len(devices)) # argument is number of processes, default is the number of CPUs
-
+    # pool = Pool()
     for device_id in devices:
         if device_id is not None:
             print ( "Using tablet %s" % device_id)
             if flash:
-                print( "flash")
-                #p = mp.Process( target=flashTablet, args=( device_id, fastboot, bootloader, android_image ))
-                #processes.append( p )
-                #p.start()
+                pool.apply_async( flashTablet, args = ( device_id, fastboot, bootloader, android_image ))
             else:
                 pool.apply_async( installAPKs, args = ( device_id, apks ))
-                #pool.map_async(installAPKs, [device_id, apks, apk_files])
     pool.close()
     pool.join()
 
