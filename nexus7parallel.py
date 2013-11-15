@@ -24,7 +24,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import subprocess, sys, re, time, glob
+import subprocess, sys, re, time, glob, datetime
 # @see http://stackoverflow.com/questions/7207309/python-how-can-i-run-python-functions-in-parallel
 # from multiprocessing import Process
 from multiprocessing import Pool
@@ -41,34 +41,49 @@ android_image='/tmp/nexus7/image-nakasi-jwr66y.zip'
 bootloader='/tmp/nexus7/bootloader-grouper-4.23.img'
 # END Paths to update:
 
+# ******************************************************************************
+# flashTablet
+# This function will 
+# ******************************************************************************
 def flashTablet( device_id, fastboot, bootloader, android_image ):
     print("Begin flash of tablet %s" % device_id)
     
     flash_cmds = [
-        [fastboot,"-s",device_id,"oem","unlock"],
-        [fastboot,"-s",device_id,"erase","boot"],
-        [fastboot,"-s",device_id,"erase","cache"],
-        [fastboot,"-s",device_id,"erase","recovery"],
-        [fastboot,"-s",device_id,"erase","system"],
-        [fastboot,"-s",device_id,"erase","userdata"],
-        [fastboot,"-s",device_id,"flash","bootloader",bootloader],
-        ["sleep","10"],
-        [fastboot,"-s",device_id,"reboot-bootloader"],
-        [fastboot,"-s",device_id,"-w","update",android_image]
+        [fastboot,"-s",device_id,"oem","unlock"], # step 0
+        [fastboot,"-s",device_id,"erase","boot"], # step 1
+        [fastboot,"-s",device_id,"erase","cache"], # step 2
+        [fastboot,"-s",device_id,"erase","recovery"], # step 3
+        [fastboot,"-s",device_id,"erase","system"], # step 4
+        [fastboot,"-s",device_id,"erase","userdata"], # step 5
+        [fastboot,"-s",device_id,"flash","bootloader",bootloader], # step 6
+        # sleep on step 7
+        [fastboot,"-s",device_id,"reboot-bootloader"], # step 8
+        [fastboot,"-s",device_id,"-w","update",android_image] # step 9
     ]
     
-    # 
+    n = 0
     for cmd in flash_cmds:
         print(cmd)
-        # subp = subprocess.Popen( [ fastboot,"-s",device_id,"reboot-bootloader"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-        subp = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-        stdout, stderr = subp.communicate()
-        subp.wait()
-        print(stdout.decode())
-        print(stderr.decode())
+        if n == 7:
+            print ("Sleeping...")
+            # time.sleep(10)
+        else:
+            time.sleep(0.25)
+            subp = subprocess.Popen( [ fastboot,"-s",device_id,"reboot-bootloader"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+            subp = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+            stdout, stderr = subp.communicate()
+            subp.wait()
+            print(stdout.decode())
+            print(stderr.decode())
+        n += 1
         # time.sleep(5)
     print ('End flash of tablet %s' % device_id)
 
+# ******************************************************************************
+# installAPKs
+# This function will install all APK files in a given directory onto all
+# connected tablets
+# ******************************************************************************
 def installAPKs( device_id, apks ):
     print ( 'Begin APK install on tablet %s' % device_id )
     for f in apks:
@@ -81,8 +96,10 @@ def installAPKs( device_id, apks ):
         print(stdout.decode())
         print(stderr.decode())
     print( "End APK install on tablet %s" % device_id )
-
     
+# ******************************************************************************
+# Main
+# ******************************************************************************
 if __name__ == '__main__':
     
     start_time = time.time()
@@ -127,10 +144,12 @@ if __name__ == '__main__':
             print ( "Using tablet %s" % device_id)
             if flash:
                 pool.apply_async( flashTablet, args = ( device_id, fastboot, bootloader, android_image ))
+                time.sleep(1) # stagger by 1 second
             else:
                 pool.apply_async( installAPKs, args = ( device_id, apks ))
     pool.close()
     pool.join()
 
-    elapsed_time = time.time() - start_time
-    print( '%s completed - %s tablet(s) in %.03f seconds\n' % ( sys.argv[0], len(devices), elapsed_time ))
+    elapsed_time = str(datetime.timedelta(seconds=(time.time() - start_time)))
+    # print( '%s completed - %s tablet(s) in %.03f\n' % ( sys.argv[0], len(devices), float(elapsed_time) ))
+    print( '%s completed - %s tablet(s) in %s\n' % ( sys.argv[0], len(devices), elapsed_time ))
