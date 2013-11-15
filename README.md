@@ -11,12 +11,21 @@ At this time, Android does not offer a lot of automation for bulk deployments.  
 
 This script can be used 1) to upgrade the Android OS, and 2) to install a series apps are available locally on disk as APK files.
 
-This script can be improved upon.  Work that could be done:
+This script can be improved upon.  For example, update argument parsing to use the getopt module, and/or remove the hard coded paths.
 
-* Update argument parsing to use the getopt module
-* Currently the script runs in serial, would be nice to run things in parallel.
+### Serial, Parallel Versions
+* The version titled **nexus7.py** was my first iteration and developed using Python 2.7.5.  With 5 tablets attached via a USB hub, I was able to flash all 5 to Android 4.3 in approximatley 18 minutes.
+* The version titled **nexus7parallel.py** was my second iteration.  This version uses Python's multiprocessing capabilities.  It was developed using Python 3.3.2.  With 5 tablets attached via a USB hub, I was able to flash all 5 to Android 4.3 in approximatley 5:38.  Each additional tablet.  Here were some runtimes I observed:
 
-On a USB hub, I was able to flash 5 tablets to Android 4.3 in approximatley 18 minutes.
+  * ```./nexus7parallel.py completed - 2 tablet(s) in 0:04:00.172587```
+
+  * ```./nexus7parallel.py completed - 3 tablet(s) in 0:04:28.856906```
+
+  * ```./nexus7parallel.py completed - 4 tablet(s) in 0:05:01.472792```
+
+  * ```./nexus7parallel.py completed - 5 tablet(s) in 0:05:38.462541```
+* The version titled **nexus7parallel-275.py** is incomplete.  It was my working version of multiprocessing until I decided to switch to Python 3.
+
 
 *Disclaimer*
 -------------
@@ -32,7 +41,7 @@ Proceed at your own risk.  I take no responsibility if you brick your own tablet
 ### Use Case 1: Flash Tablets
 
 1. Boot each device into the Android bootloader by holding the down volume button and press the power.
-2. Run the script with the "flash" parameter, e.g. ```./tablets.py flash```
+2. Run the script with the "flash" parameter, e.g. ```./nexus7.py flash``` or ```./nexus7parallel.py flash``` 
 
 ##### Notes
 - The script will unlock the bootloader, but manual intervention on each tablet is required.  Check for prompts on each tablet's screen -- you will need to press the power button to unlock the bootloader.  The script will then continue.
@@ -46,4 +55,4 @@ Proceed at your own risk.  I take no responsibility if you brick your own tablet
 5. Tap to disable *Verify apps over USB*.  Press the home button to exit Settings.
 
 ##### Run the APK installer
-1. Once all your devices are prepped, run the script with no parameters, e.g. ```./tablets.py ```
+1. Once all your devices are prepped, run the script with no parameters, e.g. ```./nexus7.py``` or ```./nexus7parallel.py``` 
