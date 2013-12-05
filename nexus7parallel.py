@@ -31,15 +31,17 @@ from multiprocessing import Pool
 
 # BEGIN Paths to update:
 # path to adb executable
-adb='/usr/local/bin/android-sdk/sdk/platform-tools/adb'
+adb='c:\\Users\\Heather\\Desktop\\android\\sdk\\platform-tools\\adb'
 # path to fastboot executable
-fastboot='/usr/local/bin/android-sdk/sdk/platform-tools/fastboot'
+fastboot='c:\\Users\\Heather\\Desktop\\android\\sdk\\platform-tools\\fastboot'
 # path to directory of APK files to install
-apk_files='/tmp/nexus7/APKs'
+apk_files='c:\\Users\\Heather\\Desktop\\nexus7'
 # path to the Android OS image file and bootloader
-android_image='/tmp/nexus7/image-nakasi-jwr66y.zip'
-bootloader='/tmp/nexus7/bootloader-grouper-4.23.img'
-# END Paths to update:
+# android_image='/tmp/nexus7/image-nakasi-jwr66y.zip' # Android 4.3
+android_image='c:\\Users\\Heather\\Desktop\\nexus7\\image-nakasi-krt16s.zip' # Android 4.4
+bootloader='c:\\Users\\Heather\\Desktop\\nexus7\\bootloader-grouper-4.23.img'# END Paths to update:
+
+results = []
 
 # ******************************************************************************
 # flashTablet
@@ -85,17 +87,29 @@ def flashTablet( device_id, fastboot, bootloader, android_image ):
 # connected tablets
 # ******************************************************************************
 def installAPKs( device_id, apks ):
+    r = 0
     print ( 'Begin APK install on tablet %s' % device_id )
     for f in apks:
         print( 'Installing %s onto %s' % ( f, device_id ))
         cmd=adb + ' -s '+device_id+" install -r "+f
         # print(cmd)
-        subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-        stdout, stderr = subp.communicate()
+        # subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+        subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], bufsize=4096 )
+        subp.communicate()
+        r = subp.returncode
         subp.wait()
-        print(stdout.decode())
-        print(stderr.decode())
     print( "End APK install on tablet %s" % device_id )
+    return r
+
+# for testing subprocess exit problems on Windows 7
+def installAPKs_wrapped( device_id, apks ):
+    try:
+        installAPKs( device_id, apks )
+    except:
+        print('%s' % (traceback.format_exc()))
+
+def checkReturnCode(r):
+    print("Return code: %s" % r)
     
 # ******************************************************************************
 # Main
@@ -113,6 +127,7 @@ if __name__ == '__main__':
         if str(sys.argv[1]) == 'flash':
             flash=True
     
+
     if flash:
         print ("Flash attached tablets")
         cmd=fastboot + " devices"
@@ -122,15 +137,14 @@ if __name__ == '__main__':
     
     # get all the APKs into a list
     # apks = [ f for f in listdir(apk_files) if isfile(join(apk_files,f)) ]
-    apks = glob.glob( apk_files+"/*.apk" ) # revisit for case sensitivity
-    
+    apks = glob.glob( apk_files+"\\*.apk" ) # revisit for case sensitivity
+    print(apks)
     # get a list of device IDs for all attached tablets
     devices = []
     p = subprocess.Popen( cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in p.stdout.readlines():
-        # print line
         # device_id = re.match( '^([%&+ \w]+).*device$', line )
-        device_id = re.match( '^([%&+ \w]+).*[a-z]+$', line.decode("latin1") )
+        device_id = re.match( '^([%&+ \w]+)\s+.*$', line.decode("latin1") )
         # for each device, install the APKs one by one
         if device_id is not None:
             devices.append(device_id.group(1))
@@ -146,10 +160,17 @@ if __name__ == '__main__':
                 pool.apply_async( flashTablet, args = ( device_id, fastboot, bootloader, android_image ))
                 time.sleep(1) # stagger by 1 second
             else:
-                pool.apply_async( installAPKs, args = ( device_id, apks ))
+                res = pool.apply_async( installAPKs, args = ( device_id, apks, ), callback=checkReturnCode)
     pool.close()
-    pool.join()
-
+    
+    # Windows seems to not exit unless this is wrapped this way
+    try:
+        s = res.get(30)
+    except Pool.TimeoutError:
+        pool.terminate()
+    
+    # sys.stdout.flush()
+    
     elapsed_time = str(datetime.timedelta(seconds=(time.time() - start_time)))
     # print( '%s completed - %s tablet(s) in %.03f\n' % ( sys.argv[0], len(devices), float(elapsed_time) ))
     print( '%s completed - %s tablet(s) in %s\n' % ( sys.argv[0], len(devices), elapsed_time ))
