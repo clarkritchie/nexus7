@@ -1,6 +1,5 @@
-#!/Library/Frameworks/Python.framework/Versions/3.3/bin/python3.3
+#!/usr/local/bin/python3
 
-#!/usr/bin/env python
 #
 # A simple script to:
 #  - Install a directory worth of APKs onto N-attached Android devices via USB
@@ -24,30 +23,43 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import subprocess, sys, re, time, glob, datetime
+import subprocess, sys, re, time, glob, datetime ,os
 # @see http://stackoverflow.com/questions/7207309/python-how-can-i-run-python-functions-in-parallel
 # from multiprocessing import Process
 from multiprocessing import Pool
 
-# BEGIN Paths to update:
-# path to adb executable
-adb='c:\\Users\\Heather\\Desktop\\android\\sdk\\platform-tools\\adb'
-# path to fastboot executable
-fastboot='c:\\Users\\Heather\\Desktop\\android\\sdk\\platform-tools\\fastboot'
-# path to directory of APK files to install
-apk_files='c:\\Users\\Heather\\Desktop\\nexus7'
-# path to the Android OS image file and bootloader
-# android_image='/tmp/nexus7/image-nakasi-jwr66y.zip' # Android 4.3
-android_image='c:\\Users\\Heather\\Desktop\\nexus7\\image-nakasi-krt16s.zip' # Android 4.4
-bootloader='c:\\Users\\Heather\\Desktop\\nexus7\\bootloader-grouper-4.23.img'# END Paths to update:
+# check if we're on a posix or Windows machine
+posix = 1
+if ( os.name == "nt"): # not sure what other versions of Windows report here
+    posix = 0
 
-results = []
+# BEGIN Paths to update
+if ( posix ):
+    # path to adb and fastboot executables
+    adb='/usr/local/bin/android-sdk/sdk/platform-tools/adb'
+    fastboot='/usr/local/bin/android-sdk/sdk/platform-tools/fastboot'
+    # path to directory of APK files to install
+    apk_files='/tmp/nexus7/APKs'
+    # path to the Android OS image file and bootloader
+    android_image='/tmp/nexus7/image-nakasi-krt16s.zip' # Android 4.4
+    bootloader='/tmp/nexus7/bootloader-grouper-4.23.img'
+else:
+    # path to adb and fastboot executables
+    adb='c:\\Users\\Heather\\Desktop\\android\\sdk\\platform-tools\\adb'
+    fastboot='c:\\Users\\Heather\\Desktop\\android\\sdk\\platform-tools\\fastboot'
+    # path to directory of APK files to install
+    apk_files='c:\\Users\\Heather\\Desktop\\nexus7'
+    # path to the Android OS image file and bootloader
+    android_image='c:\\Users\\Heather\\Desktop\\nexus7\\image-nakasi-krt16s.zip' # Android 4.4
+    bootloader='c:\\Users\\Heather\\Desktop\\nexus7\\bootloader-grouper-4.23.img'# END Paths to update:
+# END Paths to update
 
 # ******************************************************************************
 # flashTablet
 # This function will 
 # ******************************************************************************
 def flashTablet( device_id, fastboot, bootloader, android_image ):
+    r = 0
     print("Begin flash of tablet %s" % device_id)
     
     flash_cmds = [
@@ -68,10 +80,10 @@ def flashTablet( device_id, fastboot, bootloader, android_image ):
         print(cmd)
         if n == 7:
             print ("Sleeping...")
-            # time.sleep(10)
+            time.sleep(10)
         else:
-            time.sleep(0.25)
-            subp = subprocess.Popen( [ fastboot,"-s",device_id,"reboot-bootloader"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+            time.sleep(1)
+            # subp = subprocess.Popen( [ fastboot,"-s",device_id,"reboot-bootloader"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
             subp = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
             stdout, stderr = subp.communicate()
             subp.wait()
@@ -80,6 +92,7 @@ def flashTablet( device_id, fastboot, bootloader, android_image ):
         n += 1
         # time.sleep(5)
     print ('End flash of tablet %s' % device_id)
+    return r
 
 # ******************************************************************************
 # installAPKs
@@ -127,7 +140,6 @@ if __name__ == '__main__':
         if str(sys.argv[1]) == 'flash':
             flash=True
     
-
     if flash:
         print ("Flash attached tablets")
         cmd=fastboot + " devices"
@@ -138,7 +150,7 @@ if __name__ == '__main__':
     # get all the APKs into a list
     # apks = [ f for f in listdir(apk_files) if isfile(join(apk_files,f)) ]
     apks = glob.glob( apk_files+"\\*.apk" ) # revisit for case sensitivity
-    print(apks)
+
     # get a list of device IDs for all attached tablets
     devices = []
     p = subprocess.Popen( cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -157,15 +169,20 @@ if __name__ == '__main__':
         if device_id is not None:
             print ( "Using tablet %s" % device_id)
             if flash:
-                pool.apply_async( flashTablet, args = ( device_id, fastboot, bootloader, android_image ))
+                # no callback, ignoring return codes
+                res = pool.apply_async( flashTablet, args = ( device_id, fastboot, bootloader, android_image ))
                 time.sleep(1) # stagger by 1 second
             else:
                 res = pool.apply_async( installAPKs, args = ( device_id, apks, ), callback=checkReturnCode)
     pool.close()
-    
-    # Windows seems to not exit unless this is wrapped this way
+
+    # OS/X and Windows seem to be behaving differently - not sure if this is correct
+    # but pool.join() seems to block on my Windows 7 test machine
+    if ( posix ):
+        pool.join()
+        
     try:
-        s = res.get(30)
+        s = res.get( 360 ) # 6 min timeout, sufficient?
     except Pool.TimeoutError:
         pool.terminate()
     
