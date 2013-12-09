@@ -43,6 +43,14 @@ if ( posix ):
     # path to the Android OS image file and bootloader
     android_image='/tmp/nexus7/image-nakasi-krt16s.zip' # Android 4.4
     bootloader='/tmp/nexus7/bootloader-grouper-4.23.img'
+    
+    # test Mac
+    android_image='/Users/default/Documents/tablets/android4_4/nakasi-krt16s/image-nakasi-krt16s.zip' # Android 4.4
+    bootloader='/Users/default/Documents/tablets/android4_4/nakasi-krt16s/bootloader-grouper-4.23.img'
+    apk_files='/Users/default/Documents/tablets/APKs'
+    adb='/Users/default/Documents/tablets/android/sdk/platform-tools/adb'
+    fastboot='/Users/default/Documents/tablets/android/sdk/platform-tools/fastboot'
+
 else:
     # path to adb and fastboot executables
     adb='c:\\Users\\Heather\\Desktop\\android\\sdk\\platform-tools\\adb'
@@ -51,7 +59,7 @@ else:
     apk_files='c:\\Users\\Heather\\Desktop\\nexus7'
     # path to the Android OS image file and bootloader
     android_image='c:\\Users\\Heather\\Desktop\\nexus7\\image-nakasi-krt16s.zip' # Android 4.4
-    bootloader='c:\\Users\\Heather\\Desktop\\nexus7\\bootloader-grouper-4.23.img'# END Paths to update:
+    bootloader='c:\\Users\\Heather\\Desktop\\nexus7\\bootloader-grouper-4.23.img'
 # END Paths to update
 
 # ******************************************************************************
@@ -60,6 +68,7 @@ else:
 # ******************************************************************************
 def flashTablet( device_id, fastboot, bootloader, android_image ):
     r = 0
+    sleep = 10
     print("Begin flash of tablet %s" % device_id)
     
     flash_cmds = [
@@ -69,26 +78,27 @@ def flashTablet( device_id, fastboot, bootloader, android_image ):
         [fastboot,"-s",device_id,"erase","recovery"], # step 3
         [fastboot,"-s",device_id,"erase","system"], # step 4
         [fastboot,"-s",device_id,"erase","userdata"], # step 5
-        [fastboot,"-s",device_id,"flash","bootloader",bootloader], # step 6
-        # sleep on step 7
-        [fastboot,"-s",device_id,"reboot-bootloader"], # step 8
+        [fastboot,"-s",device_id,"flash","bootloader",bootloader], # step 6        
+        [fastboot,"-s",device_id,"reboot-bootloader"], # step 7
+        # sleep on step 8
         [fastboot,"-s",device_id,"-w","update",android_image] # step 9
     ]
     
     n = 0
     for cmd in flash_cmds:
-        print(cmd)
-        if n == 7:
-            print ("Sleeping...")
-            time.sleep(10)
-        else:
-            time.sleep(1)
-            # subp = subprocess.Popen( [ fastboot,"-s",device_id,"reboot-bootloader"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-            subp = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-            stdout, stderr = subp.communicate()
-            subp.wait()
-            print(stdout.decode())
-            print(stderr.decode())
+        # sleep for 10 sec while the bootloader reboots
+        if n == 8:
+            print ( "Sleeping for %s...\r\n" % sleep )
+            time.sleep(sleep)
+            
+        print('%s: %s' % ( n, cmd ))
+        time.sleep(1)
+        # bufsize=4096, 
+        subp = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+        stdout, stderr = subp.communicate()
+        subp.wait()
+        print(stdout.decode())
+        print(stderr.decode())
         n += 1
         # time.sleep(5)
     print ('End flash of tablet %s' % device_id)
@@ -105,9 +115,10 @@ def installAPKs( device_id, apks ):
     for f in apks:
         print( 'Installing %s onto %s' % ( f, device_id ))
         cmd=adb + ' -s '+device_id+" install -r "+f
-        # print(cmd)
-        # subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-        subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], bufsize=4096 )
+        print(cmd)
+        subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], bufsize=4096, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+        # subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f] )
+        # subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], bufsize=4096 )
         subp.communicate()
         r = subp.returncode
         subp.wait()
@@ -149,7 +160,7 @@ if __name__ == '__main__':
     
     # get all the APKs into a list
     # apks = [ f for f in listdir(apk_files) if isfile(join(apk_files,f)) ]
-    apks = glob.glob( apk_files+"\\*.apk" ) # revisit for case sensitivity
+    apks = glob.glob( apk_files+"/*.apk" ) # revisit for case sensitivity and forward/backslash compatability
 
     # get a list of device IDs for all attached tablets
     devices = []
@@ -181,10 +192,10 @@ if __name__ == '__main__':
     if ( posix ):
         pool.join()
         
-    try:
-        s = res.get( 360 ) # 6 min timeout, sufficient?
-    except Pool.TimeoutError:
-        pool.terminate()
+    #try:
+    #    s = res.get( 360 ) # 6 min timeout, sufficient?
+    #except Pool.TimeoutError:
+    #    pool.terminate()
     
     # sys.stdout.flush()
     
