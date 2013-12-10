@@ -39,9 +39,10 @@ This script has been run successfully on Mac computers running OS/X 10.8 and 10.
 ### Setup
 
 1. Install the [Android SDK](http://developer.android.com/sdk/index.html).
-2. Update the paths in the .ini file (n7.ini) -- see below.
-3. Download a [Factory image](https://developers.google.com/android/nexus/images) of Android that is appropriate for your device
+2. Update the paths in the .ini file (n7.ini) -- see Edit Config File below.
+3. If upgrading the Android OS, download a [Factory image](https://developers.google.com/android/nexus/images) of Android that is appropriate for your device
 4. Install or confirm you are using Python 3 (e.g.  ```python3 -V``` should return something that shows the version of Python you are running)
+5. If patching the Android OS, download a .zip file containing the patch -- normally this is available online shortly after an official Android OTA update.
 5. Connect any number of tablets to your computer via a USB hub.
 
 ### Edit Config File
