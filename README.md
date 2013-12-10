@@ -45,19 +45,19 @@ This script has been run successfully on Mac computers running OS/X 10.8 and 10.
 5. Connect any number of tablets to your computer via a USB hub.
 
 ### Edit Config File
-Edit the included config file (p7.ini) to include:
+Edit the included sample config file (n7.ini) to include:
 
-  * Path to adb executable
+  * Path to your adb executable
   
-  * Path to fastboot executable
+  * Path to your fastboot executable
   
-  * Path to bootloader
+  * Path to your copy of the bootloader
   
-  * Path to Android OS image
+  * Path to your copy of the Android OS image
   
-  * Path to Android OS patch file
+  * Path to your copy of the Android OS patch file
   
-  * Path to directory of APK files
+  * Path to your directory of APK files
   
   * Up to 5 files to copy onto the device and their target destination (path) on the tablet
   
