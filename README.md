@@ -55,23 +55,34 @@ Edit the included config file (p7.ini) to include:
   
   * Path to Android OS image
   
+  * Path to Android OS patch file
+  
   * Path to directory of APK files
   
-  * Up to 5 files to push onto the device and their target destination
+  * Up to 5 files to copy onto the device and their target destination (path) on the tablet
   
 If no configuration file is specified, the script assumes a file named ```n7.ini``` is in the same directory as the script itself.  An alternate configuration file can be specified using the "-c" parameter, e.g.  ```./n7p.py -c OTHERFILE``` - where OTHERFILE is a file in the same structure as the included n7.ini.
 
   
-### Use Case 1: Flash Tablets
+### Use Case 1: Update Android OS
 1. Update config file, as appropriate.
-2. Boot each device into the Android bootloader by holding the down volume button and press the power.
+2. Boot each device into the Android bootloader by holding the down volume button and press the power button.
 3. Run the script with the "-u" parameter, e.g. ```./n7p.py -u``` 
 4. When each tablet is complete, it will reboot into the new version of Android.  Complete the setup wizard.
 
 ##### Bootloader Note
 - The script will unlock the bootloader, but manual intervention on each tablet is required.  Check for prompts on each tablet's screen -- you will need to press the power button to unlock the bootloader.  The script will then continue.
 
-### Use Case 2: Install Apps
+### Use Case 2: Patch Android OS
+1. Update config file, as appropriate.
+2. Boot each device into the Android recovery mode by holding the down volume button and press the power button, use the volume up/down and choose Recovery mode.  Press the power button to enter recovery mode.  The tablet should restart and end with an Android logo with a exclamation mark.  See also [Guide: How to Use “adb sideload” to Update a Nexus Without Root or Custom Recovery](http://www.droid-life.com/2013/02/12/guide-how-to-use-adb-sideload-to-update-a-nexus-without-root-or-custom-recovery/)
+3. Press Volume Up and Power buttons at the same time to bypass this screen and enter stock recovery.
+4. With Volume Down, highlight “apply update from ADB.” Press Power to choose it.
+5. Run the script with the "-u" parameter, e.g. ```./n7p.py -p``` 
+6. When each tablet is complete, use the power button to manually choose the option to reboot.
+7. Verify Android version in System settings.
+
+### Use Case 3: Install Apps
 ##### Prepare Each Tablet
 1. If you flashed the device (as above) or just unboxed it, you will need to complete the Android setup wizard.
 2. Once your tablet is ready to use, access *Settings* and scroll down to *About tablet* - tap to select.
@@ -84,7 +95,7 @@ If no configuration file is specified, the script assumes a file named ```n7.ini
 2. Once all your devices are prepped, run the script with no parameters, e.g. ```./n7p.py -a``` 
 3. Confirm apps were installed.
 
-### Use Case 3: Copy Files onto Tablet
+### Use Case 4: Copy Files onto Tablet
 1. Update config file, as appropriate.
 2. Follow steps under Prepare Each Tablet under Use Case 2: Install Apps
 3. Once all your devices are prepped, run the script with no parameters, e.g. ```./n7p.py -f``` 

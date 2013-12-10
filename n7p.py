@@ -28,7 +28,7 @@ import subprocess, sys, re, time, glob, datetime, os, argparse
 # from multiprocessing import Process
 from multiprocessing import Pool
 
-VERSION=1.2
+VERSION=1.3
 CONFIG_FILE = 'n7.ini'
 
 # check if we're on a posix or Windows machine
@@ -76,15 +76,15 @@ class ParseINI(dict):
       return []
     
 # ******************************************************************************
-# flashTablet
-# This function will 
+# upgradeTablet
+# This function will ...
 # ******************************************************************************
-def flashTablet( device_id, fastboot, bootloader, android_image ):
+def upgradeTablet( device_id, fastboot, bootloader, android_image ):
     r = 0
     sleep = 10
-    print("Begin flash of tablet %s" % device_id)
+    print( 'Begin upgrade of tablet %s'  % device_id )
     
-    flash_cmds = [
+    upgrade_cmds = [
         [fastboot,"-s",device_id,"oem","unlock"], # step 0
         [fastboot,"-s",device_id,"erase","boot"], # step 1
         [fastboot,"-s",device_id,"erase","cache"], # step 2
@@ -98,17 +98,17 @@ def flashTablet( device_id, fastboot, bootloader, android_image ):
     ]
     
     n = 0
-    for cmd in flash_cmds:
+    for cmd in upgrade_cmds:
         # sleep for 10 sec while the bootloader reboots
         print( 'Step #%s' % n)
         
         if n == 8:
-            print ( "Sleeping for %s...\r\n" % sleep )
+            print ( 'Sleeping for %s...\r\n' % sleep )
             time.sleep(sleep)
-            
+        
+        # output command to STDOUT
         print( ' '.join(map(str, cmd)) )
         time.sleep(1)
-        # bufsize=4096, 
         subp = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
         stdout, stderr = subp.communicate()
         subp.wait()
@@ -116,21 +116,41 @@ def flashTablet( device_id, fastboot, bootloader, android_image ):
         print(stderr.decode())
         n += 1
 
-    print ('End flash of tablet %s' % device_id)
+    print ( 'End upgrade of tablet %s' % device_id )
     return r
 
 # ******************************************************************************
-# installAPKs
+# patchTablet
+# This function will ...
+# ******************************************************************************
+def patchTablet( device_id, adb, patch_file ):
+    r = 0
+    sleep = 10
+    print( 'Begin patch of tablet %s' % device_id )
+
+    cmd='%s -s %s sideload %s' % ( adb, device_id, patch_file )
+    print( cmd )
+    subp = subprocess.Popen( [adb,"-s",device_id,"sideload",patch_file], bufsize=4096 )
+    stdout, stderr = subp.communicate()
+    subp.wait()
+    print(stdout.decode())
+    print(stderr.decode())
+
+    print ( 'End patch of tablet %s' % device_id )
+    return r
+
+# ******************************************************************************
+# installApps
 # This function will install all APK files in a given directory onto all
 # connected tablets
 # ******************************************************************************
-def installAPKs( device_id, apks ):
+def installApps( device_id, apks ):
     r = 0
     print ( 'Begin APK install on tablet %s' % device_id )
     for f in apks:
         print( 'Installing %s onto %s' % ( f, device_id ))
-        cmd=adb + ' -s '+device_id+" install -r "+f
-        print(cmd)
+        # cmd=adb + ' -s '+device_id+" install -r "+f
+        # print(cmd)
         subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], bufsize=4096, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
         subp.communicate()
         r = subp.returncode
@@ -169,10 +189,11 @@ if __name__ == '__main__':
     print( 'Running %s version %s' % ( os.path.basename(__file__), VERSION ))
     
     parser = argparse.ArgumentParser()
-    parser.add_argument( '-c','--config', metavar = 'CONFIG', type = str, help = 'Use alternate configuration file (Default: %s)' % CONFIG_FILE )
+    parser.add_argument( '-c', '--config', metavar = 'CONFIG', type = str, help = 'Use alternate configuration file (Default: %s)' % CONFIG_FILE )
     group = parser.add_argument_group( 'Choose one of three operations below' )
     
     group.add_argument( '-u', '--upgrade',action='store_true', default=False,help='Upgrade Android OS on attached tablets' )
+    group.add_argument( '-p', '--patch',action='store_true', default=False,help='Patch Android OS on attached tablets' )
     group.add_argument( '-a', '--apps',action='store_true', default=False,help='Install apps on attached tablets' )
     group.add_argument( '-f', '--files',action='store_true', default=False,help='Push files to attached tablets' )
     
@@ -194,6 +215,7 @@ if __name__ == '__main__':
         apk_files = ini['nexus7']['apk_files'].replace("'", "")
         android_image = ini['nexus7']['android_image'].replace("'", "")
         bootloader = ini['nexus7']['bootloader'].replace("'", "")
+        patch_file = ini['nexus7']['patch'].replace("'", "")
         file1 = ini['files']['file1'].replace("'", "")
         file2 = ini['files']['file2'].replace("'", "")
         file3 = ini['files']['file3'].replace("'", "")
@@ -203,24 +225,29 @@ if __name__ == '__main__':
         print( 'Error!  Config file %s does not exist' % CONFIG_FILE )
         sys.exit(0)
     
-    flash=False
-    apk=False
+    upgrade=False
+    patch=False
+    apps=False
     files=False
     
     if output.upgrade:
-        flash=True
+        upgrade=True
         cmd=fastboot + " devices"
-        print('Upgrade attached tablets')
+        print( 'Upgrade Android OS on all attached tablets' )
+    elif output.patch:
+        patch=True
+        cmd=adb + " devices"
+        print( 'Patch Android OS on all attached tablets' )
     elif output.apps:
-        apk=True
+        apps=True
         cmd=adb + " devices"
         # get all the APKs into a list
         apks = glob.glob( apk_files+"/*.apk" ) # check case sensitivity, slash compatability
-        print('Install apps on attached tablets')
+        print( 'Install apps on attached tablets' )
     elif output.files:
         files=True
         cmd=adb + " devices"
-        print('Install files on attached tablets')
+        print( 'Install files on attached tablets' )
     else:
         parser.print_help()
         sys.exit(0)
@@ -229,8 +256,9 @@ if __name__ == '__main__':
     print( 'adb: %s' % adb )
     print( 'fastboot: %s' % fastboot )
     print( 'APK directory: %s' % apk_files )
-    print( 'Android image: %s' % android_image )
+    print( 'Android OS image: %s' % android_image )
     print( 'Android bootloader: %s' % bootloader )
+    print( 'Android patch: %s' % patch )
     print( '***************************************************************\n' )
 
     # get a list of device IDs for all attached tablets
@@ -253,14 +281,16 @@ if __name__ == '__main__':
     for device_id in devices:
         if device_id is not None:
             print ( "Using tablet %s" % device_id)
-            if flash:
-                print ("Flash attached tablets")
+            if upgrade:
                 # no callback, ignoring return codes
-                res = pool.apply_async( flashTablet, args = ( device_id, fastboot, bootloader, android_image ))
+                res = pool.apply_async( upgradeTablet, args = ( device_id, fastboot, bootloader, android_image ))
                 time.sleep(1) # stagger by 1 second
-            elif apk:
-                print ("Install APKs on attached tablets")
-                res = pool.apply_async( installAPKs, args = ( device_id, apks, ), callback=checkReturnCode )
+            elif patch:
+                # no callback, ignoring return codes
+                res = pool.apply_async( patchTablet, args = ( device_id, adb, patch_file ))
+                time.sleep(1) # stagger by 1 second
+            elif apps:
+                res = pool.apply_async( installApps, args = ( device_id, apks, ), callback=checkReturnCode )
             elif files:
                 n = 1
                 # for f in [file1,file2,file3,file4,file5,file6,file7,file8,file9]:
