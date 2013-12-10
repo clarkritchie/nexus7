@@ -36,7 +36,10 @@ posix = 1
 if ( os.name == "nt"): # not sure what other versions of Windows report here?
     posix = 0
 
+# ******************************************************************************
+# Simple configuration file parser, taken from:
 # http://www.decalage.info/en/python/configparser
+# ******************************************************************************
 class ParseINI(dict):
   def __init__(self, f):
     self.f = f
@@ -277,4 +280,4 @@ if __name__ == '__main__':
     
     elapsed_time = str(datetime.timedelta(seconds=(time.time() - start_time)))
     # print( '%s completed - %s tablet(s) in %.03f\n' % ( sys.argv[0], len(devices), float(elapsed_time) ))
-    print( '%s completed - %s tablet(s) in %s\n' % ( sys.argv[0], len(devices), elapsed_time ))
+    print( '%s version %s completed %s tablet(s) in %s\n' % ( os.path.basename(__file__), VERSION, len(devices), elapsed_time ))

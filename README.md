@@ -11,7 +11,7 @@ Proceed at your own risk!  I take no responsibility if you brick your own tablet
 ### Background
 Our project had a few specific requirements worth noting, including a) rooting the device was not approved, and b) users were not required to have Google accounts to use the tablet.
 
-We received a large shipment of Nexus 7 tablets (2012 Wi-Fi edition, a.k.a. "nakasi") running Android 4.2.  First, we wanted to upgrade them all to run Android 4.4.  Second, we wanted to pre-install a series of apps.  Third, we wanted the ability to push a set of files onto the device.
+We received a large shipment of Nexus 7 tablets (2012 Wi-Fi edition, a.k.a. "nakasi") running Android 4.2.  First, we wanted to upgrade them all to run Android 4.4.  Second, we wanted to pre-install a series of apps.  Third, we wanted the ability to copy a set of files onto the device.
 
 Some of of the apps we pre-installed were custom/in-house developed.  Others were free apps available in the Play store.  Because our users were not required to have Google accounts, we found the [APK Extractor](https://play.google.com/store/apps/details?id=net.sylark.apkextractor&hl=en) to be useful to work with this requirement.  On a test tablet, we could login to a Google account, install an app via the Play store, then extract the APK for that app.
 
@@ -23,7 +23,7 @@ This script can be used 1) to upgrade the Android OS, and 2) install a series ap
 * This script requires Python 3 (Python 3.3.2 at the time of this writing).  The original version of this script was developed using Python 2.7.5.  We switched to Python's multiprocessing capabilities.  It was developed using Python 3.3.2.  With 5 tablets attached via a USB hub, I was able to flash all 5 to Android 4.3 in approximatley 5:38.  Each additional tablet adds around ~30 seconds.
 
 ### Performance
-Listed below are some runtimes I observed upgrading the Android OS on 5 tablets, connected via a USB hub to a MacBook Pro (2.9 GHz i7):
+Below are some runtimes I observed upgrading the Android OS on 5 tablets connected via a USB hub to a MacBook Pro (2.9 GHz i7):
 
   * ```./n7p.py completed - 2 tablet(s) in 0:04:00.172587```
 
@@ -32,8 +32,9 @@ Listed below are some runtimes I observed upgrading the Android OS on 5 tablets,
   * ```./n7p.py completed - 4 tablet(s) in 0:05:01.472792```
 
   * ```./n7p.py completed - 5 tablet(s) in 0:05:38.462541```
-* The version titled **nexus7parallel-275.py** is incomplete.  It was my working version of multiprocessing until I decided to switch to Python 3.
 
+### Platform Compatability
+This script has been run successfully on Mac computers running OS/X 10.8 and 10.9 and a PC running Windows 7 Starter Edition.
 
 ### Setup
 
@@ -43,7 +44,7 @@ Listed below are some runtimes I observed upgrading the Android OS on 5 tablets,
 4. Install or confirm you are using Python 3 (e.g.  ```python3 -V``` should return something that shows the version of Python you are running)
 5. Connect any number of tablets to your computer via a USB hub.
 
-### Config File
+### Edit Config File
 Edit the included config file (p7.ini) to include:
 
   * Path to adb executable
