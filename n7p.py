@@ -1,0 +1,280 @@
+#!/usr/local/bin/python3
+
+#
+# A simple script to:
+#  - Install a directory worth of APKs onto N-attached Android devices via USB
+#  - Flash N-attached Android devices via USB with unlocked bootloader
+#
+# Usage:  nexus7parallel.py -- Will install all APKs in the directory path hard coded below
+#         nexus7parallel.py flash -- Will flash using the bootloader and Android OS image hard coded below
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+import subprocess, sys, re, time, glob, datetime, os, argparse
+# @see http://stackoverflow.com/questions/7207309/python-how-can-i-run-python-functions-in-parallel
+# from multiprocessing import Process
+from multiprocessing import Pool
+
+VERSION=1.2
+CONFIG_FILE = 'n7.ini'
+
+# check if we're on a posix or Windows machine
+posix = 1
+if ( os.name == "nt"): # not sure what other versions of Windows report here?
+    posix = 0
+
+# http://www.decalage.info/en/python/configparser
+class ParseINI(dict):
+  def __init__(self, f):
+    self.f = f
+    self.__read()
+ 
+  def __read(self):
+    with open(self.f, 'r') as f:
+      slovnik = self
+      for line in f:
+        if not line.startswith("#") and not line.startswith(';') and line.strip() != "":
+          line = line.replace('=', ':')
+          line = line.replace(';', '#')
+          index = line.find('#')
+          line = line[:index]
+          line = line.strip()
+          if line.startswith("["):
+            sections = line[1:-1].split('.')
+            slovnik = self
+            for section in sections:
+              if section not in slovnik:
+                slovnik[section] = {}
+              slovnik = slovnik[section]
+          else:
+            if not self:
+              slovnik['global'] = {}
+              slovnik = slovnik['global']
+            parts = line.split(":", 1)
+            slovnik[parts[0].strip()] = parts[1].strip()
+ 
+  def items(self, section):
+    try:
+      return self[section]
+    except KeyError:
+      return []
+    
+# ******************************************************************************
+# flashTablet
+# This function will 
+# ******************************************************************************
+def flashTablet( device_id, fastboot, bootloader, android_image ):
+    r = 0
+    sleep = 10
+    print("Begin flash of tablet %s" % device_id)
+    
+    flash_cmds = [
+        [fastboot,"-s",device_id,"oem","unlock"], # step 0
+        [fastboot,"-s",device_id,"erase","boot"], # step 1
+        [fastboot,"-s",device_id,"erase","cache"], # step 2
+        [fastboot,"-s",device_id,"erase","recovery"], # step 3
+        [fastboot,"-s",device_id,"erase","system"], # step 4
+        [fastboot,"-s",device_id,"erase","userdata"], # step 5
+        [fastboot,"-s",device_id,"flash","bootloader",bootloader], # step 6        
+        [fastboot,"-s",device_id,"reboot-bootloader"], # step 7
+        # sleep on step 8
+        [fastboot,"-s",device_id,"-w","update",android_image] # step 9
+    ]
+    
+    n = 0
+    for cmd in flash_cmds:
+        # sleep for 10 sec while the bootloader reboots
+        print( 'Step #%s' % n)
+        
+        if n == 8:
+            print ( "Sleeping for %s...\r\n" % sleep )
+            time.sleep(sleep)
+            
+        print( ' '.join(map(str, cmd)) )
+        time.sleep(1)
+        # bufsize=4096, 
+        subp = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+        stdout, stderr = subp.communicate()
+        subp.wait()
+        print(stdout.decode())
+        print(stderr.decode())
+        n += 1
+
+    print ('End flash of tablet %s' % device_id)
+    return r
+
+# ******************************************************************************
+# installAPKs
+# This function will install all APK files in a given directory onto all
+# connected tablets
+# ******************************************************************************
+def installAPKs( device_id, apks ):
+    r = 0
+    print ( 'Begin APK install on tablet %s' % device_id )
+    for f in apks:
+        print( 'Installing %s onto %s' % ( f, device_id ))
+        cmd=adb + ' -s '+device_id+" install -r "+f
+        print(cmd)
+        subp = subprocess.Popen( [adb,"-s",device_id,"install","-r",f], bufsize=4096, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+        subp.communicate()
+        r = subp.returncode
+        subp.wait()
+    print( "End APK install on tablet %s" % device_id )
+    return r
+
+def copyFiles( device_id, adb, filename, path ):
+    r = 0
+    dest=path+"/"+os.path.basename(filename)
+    print ( 'Begin file copy %s to %s on tablet %s' % ( filename, dest, device_id ) )
+    subp = subprocess.Popen( [adb,"-s",device_id,"push",filename,dest] )
+    subp.communicate()
+    r = subp.returncode
+    subp.wait()
+    print ( 'End file copy on tablet %s' % device_id )
+    return r
+
+# for testing subprocess exit problems on Windows 7
+# def installAPKs_wrapped( device_id, apks ):
+#    try:
+#        installAPKs( device_id, apks )
+#    except:
+#        print('%s' % (traceback.format_exc()))
+
+def checkReturnCode(r):
+    print("Return code: %s" % r)
+
+# ******************************************************************************
+# Main
+# ******************************************************************************
+if __name__ == '__main__':
+    
+    start_time = time.time()
+    
+    print( 'Running %s version %s' % ( os.path.basename(__file__), VERSION ))
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '-c','--config', metavar = 'CONFIG', type = str, help = 'Use alternate configuration file (Default: %s)' % CONFIG_FILE )
+    group = parser.add_argument_group( 'Choose one of three operations below' )
+    
+    group.add_argument( '-u', '--upgrade',action='store_true', default=False,help='Upgrade Android OS on attached tablets' )
+    group.add_argument( '-a', '--apps',action='store_true', default=False,help='Install apps on attached tablets' )
+    group.add_argument( '-f', '--files',action='store_true', default=False,help='Push files to attached tablets' )
+    
+    output = parser.parse_args()
+    # check if the passed an alt. config file
+    if output.config is not None:
+        CONFIG_FILE = output.config
+    # print('Output %s' % output.config)
+    
+    # if they specified an alternate cofiguration file, use it
+    # if not output.config:
+    if os.path.exists( CONFIG_FILE ):
+        # need to check that this file exists, maybe turn it into an argument
+        # ini = ParseINI( str(sys.argv[1]) )
+        print("Using %s config file" % CONFIG_FILE )
+        ini = ParseINI( CONFIG_FILE )
+        adb = ini['nexus7']['adb'].replace("'", "")
+        fastboot = ini['nexus7']['fastboot'].replace("'", "")
+        apk_files = ini['nexus7']['apk_files'].replace("'", "")
+        android_image = ini['nexus7']['android_image'].replace("'", "")
+        bootloader = ini['nexus7']['bootloader'].replace("'", "")
+        file1 = ini['files']['file1'].replace("'", "")
+        file2 = ini['files']['file2'].replace("'", "")
+        file3 = ini['files']['file3'].replace("'", "")
+        file4 = ini['files']['file4'].replace("'", "")
+        file5 = ini['files']['file5'].replace("'", "")
+    else:
+        print( 'Error!  Config file %s does not exist' % CONFIG_FILE )
+        sys.exit(0)
+    
+    flash=False
+    apk=False
+    files=False
+    
+    if output.upgrade:
+        flash=True
+        cmd=fastboot + " devices"
+        print('Upgrade attached tablets')
+    elif output.apps:
+        apk=True
+        cmd=adb + " devices"
+        # get all the APKs into a list
+        apks = glob.glob( apk_files+"/*.apk" ) # check case sensitivity, slash compatability
+        print('Install apps on attached tablets')
+    elif output.files:
+        files=True
+        cmd=adb + " devices"
+        print('Install files on attached tablets')
+    else:
+        parser.print_help()
+        sys.exit(0)
+
+    print( '\n***************************************************************' )
+    print( 'adb: %s' % adb )
+    print( 'fastboot: %s' % fastboot )
+    print( 'APK directory: %s' % apk_files )
+    print( 'Android image: %s' % android_image )
+    print( 'Android bootloader: %s' % bootloader )
+    print( '***************************************************************\n' )
+
+    # get a list of device IDs for all attached tablets
+    devices = []
+    p = subprocess.Popen( cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in p.stdout.readlines():
+        device_id = re.match( '^([0-9a-fA-F]+)\s+.*$', line.decode("latin1") )
+        # for each device, install the APKs one by one
+        if device_id is not None:
+            devices.append(device_id.group(1))
+    retval = p.wait()
+    
+    if len(devices) == 0:
+        print( 'Error!  No device(s) found or device(s) are not ready' )
+        sys.exit(0)
+              
+    # setup the pool
+    pool = Pool(processes=len(devices)) # argument is number of processes, default is the number of CPUs
+    # pool = Pool()
+    for device_id in devices:
+        if device_id is not None:
+            print ( "Using tablet %s" % device_id)
+            if flash:
+                print ("Flash attached tablets")
+                # no callback, ignoring return codes
+                res = pool.apply_async( flashTablet, args = ( device_id, fastboot, bootloader, android_image ))
+                time.sleep(1) # stagger by 1 second
+            elif apk:
+                print ("Install APKs on attached tablets")
+                res = pool.apply_async( installAPKs, args = ( device_id, apks, ), callback=checkReturnCode )
+            elif files:
+                n = 1
+                # for f in [file1,file2,file3,file4,file5,file6,file7,file8,file9]:
+                for filename in [file1,file2,file3,file4,file5]:
+                    f = filename.split(',')[0] # filename
+                    p = filename.split(',')[1] # path
+                    if os.path.isfile(f):
+                        copyFiles( device_id, adb, f, p )
+            else:
+                print( '\r\nNothing to do!\r\n' )
+    pool.close()
+
+    # OS/X and Windows seem to be behaving differently - not sure if this is correct
+    # but pool.join() seems to block on my Windows 7 test machine
+    if ( posix ):
+        pool.join()
+    
+    elapsed_time = str(datetime.timedelta(seconds=(time.time() - start_time)))
+    # print( '%s completed - %s tablet(s) in %.03f\n' % ( sys.argv[0], len(devices), float(elapsed_time) ))
+    print( '%s completed - %s tablet(s) in %s\n' % ( sys.argv[0], len(devices), elapsed_time ))
