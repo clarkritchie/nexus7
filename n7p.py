@@ -258,7 +258,7 @@ if __name__ == '__main__':
     print( 'APK directory: %s' % apk_files )
     print( 'Android OS image: %s' % android_image )
     print( 'Android bootloader: %s' % bootloader )
-    print( 'Android patch: %s' % patch )
+    print( 'Android patch: %s' % patch_file )
     print( '***************************************************************\n' )
 
     # get a list of device IDs for all attached tablets
