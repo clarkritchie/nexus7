@@ -85,7 +85,7 @@ If no configuration file is specified, the script assumes a file named ```n7.ini
 7. Verify Android version in System settings.  Note patching fails if the patch is not for the correct version of Android (e.g. 4.4.2 patch applied to Android 4.3.0).
 
 ##### Windows ADB Driver Note
-Windows did not recognize my tablet when it was booted into recovery mode -- e.g. three low beeps -- and as a result I could not patch the OS as adb could not see any tablets.  See [Windows doesn't recognize Nexus 7 in recovery mode](http://android.stackexchange.com/questions/57011/windows-doesnt-recognize-nexus-7-in-recovery-mode)).  Koushik Dutta's [Universal ADB Driver for Windows](https://github.com/koush/UniversalAdbDriver) worked great on Windows 7.
+Windows did not recognize my tablet when it was booted into recovery mode -- e.g. three low beeps -- and as a result I could not patch the OS as adb could not see any tablets.  See [Windows doesn't recognize Nexus 7 in recovery mode](http://android.stackexchange.com/questions/57011/windows-doesnt-recognize-nexus-7-in-recovery-mode)).  Koushik Dutta's [Universal ADB Driver for Windows](https://github.com/koush/UniversalAdbDriver) worked great for me on Windows 7.
 
 
 ### Use Case 3: Install Apps
@@ -102,7 +102,7 @@ Windows did not recognize my tablet when it was booted into recovery mode -- e.g
 3. Confirm apps were installed.
 
 ##### Windows ADB Driver Note
-On my Windows computer, Windows seemed to recognize my device -- e.g. low beep/high beep -- but adb could not see it (e.g. ```adb devices```).  If this happens to you, try rolling the driver back to the version provided by Google ()noted above in Setup).  And God speed.
+On my Windows computer, Windows seemed to recognize my device -- e.g. low beep/high beep -- but adb could not see it (e.g. ```adb devices```).  If this happens to you, try rolling the driver back to the version provided by Google (noted above in Setup).
 
 ### Use Case 4: Copy Files onto Tablet
 1. Update config file, as appropriate.

@@ -145,7 +145,7 @@ def patchTablet( device_id, adb, patch_file ):
 # This function will install all APK files in a given directory onto all
 # connected tablets
 # ******************************************************************************
-def installApps( device_id, apks ):
+def installApps( device_id, adb, apks ):
     r = 0
     print ( 'Begin APK install on tablet %s' % device_id )
     for f in apks:
@@ -291,7 +291,7 @@ if __name__ == '__main__':
                 res = pool.apply_async( patchTablet, args = ( device_id, adb, patch_file ))
                 time.sleep(1) # stagger by 1 second
             elif apps:
-                res = pool.apply_async( installApps, args = ( device_id, apks, ), callback=checkReturnCode )
+                res = pool.apply_async( installApps, args = ( device_id, adb, apks, ), callback=checkReturnCode )
             elif files:
                 n = 1
                 # for f in [file1,file2,file3,file4,file5,file6,file7,file8,file9]:
