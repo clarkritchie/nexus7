@@ -28,13 +28,13 @@ import subprocess, sys, re, time, glob, datetime, os, argparse
 # from multiprocessing import Process
 from multiprocessing import Pool
 
-VERSION=1.3
+VERSION=1.3.1
 CONFIG_FILE = 'n7.ini'
 
 # check if we're on a posix or Windows machine
-posix = 1
-if ( os.name == "nt"): # not sure what other versions of Windows report here?
-    posix = 0
+#posix = 1
+#if ( os.name == "nt"): # not sure what other versions of Windows report here?
+#    posix = 0
 
 # ******************************************************************************
 # Simple configuration file parser, taken from:
@@ -137,6 +137,7 @@ def patchTablet( device_id, adb, patch_file ):
     print(stderr.decode())
 
     print ( 'End patch of tablet %s' % device_id )
+    print ( '\n(Your tablet will now verify the OS patch, this may take a few minutes...)' )
     return r
 
 # ******************************************************************************
@@ -155,7 +156,7 @@ def installApps( device_id, apks ):
         subp.communicate()
         r = subp.returncode
         subp.wait()
-    print( "End APK install on tablet %s" % device_id )
+    print( 'End APK install on tablet %s' % device_id )
     return r
 
 def copyFiles( device_id, adb, filename, path ):
@@ -192,10 +193,10 @@ if __name__ == '__main__':
     parser.add_argument( '-c', '--config', metavar = 'CONFIG', type = str, help = 'Use alternate configuration file (Default: %s)' % CONFIG_FILE )
     group = parser.add_argument_group( 'Choose one of three operations below' )
     
-    group.add_argument( '-u', '--upgrade',action='store_true', default=False,help='Upgrade Android OS on attached tablets' )
-    group.add_argument( '-p', '--patch',action='store_true', default=False,help='Patch Android OS on attached tablets' )
-    group.add_argument( '-a', '--apps',action='store_true', default=False,help='Install apps on attached tablets' )
-    group.add_argument( '-f', '--files',action='store_true', default=False,help='Push files to attached tablets' )
+    group.add_argument( '-u', '--upgrade',action='store_true', default=False,help='Upgrade Android OS on all connected tablets (using fastboot)' )
+    group.add_argument( '-p', '--patch',action='store_true', default=False,help='Patch Android OS on all connected tablets (using adb sideload)' )
+    group.add_argument( '-a', '--apps',action='store_true', default=False,help='Install apps on all connected tablets (using adb install)' )
+    group.add_argument( '-f', '--files',action='store_true', default=False,help='Copy files to all connected tablets (using adb push)' )
     
     output = parser.parse_args()
     # check if the passed an alt. config file
@@ -272,7 +273,7 @@ if __name__ == '__main__':
     retval = p.wait()
     
     if len(devices) == 0:
-        print( 'Error!  No device(s) found or device(s) are not ready' )
+        print( 'Error!  No tablet(s) found or tablet(s) are not ready' )
         sys.exit(0)
               
     # setup the pool
@@ -305,8 +306,9 @@ if __name__ == '__main__':
 
     # OS/X and Windows seem to be behaving differently - not sure if this is correct
     # but pool.join() seems to block on my Windows 7 test machine
-    if ( posix ):
-        pool.join()
+    #if ( posix ):
+    #    pool.join()
+    pool.join()
     
     elapsed_time = str(datetime.timedelta(seconds=(time.time() - start_time)))
     # print( '%s completed - %s tablet(s) in %.03f\n' % ( sys.argv[0], len(devices), float(elapsed_time) ))
