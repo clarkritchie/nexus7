@@ -92,7 +92,7 @@ Windows did not recognize my tablet when it was booted into recovery mode -- e.g
 ##### Prepare Each Tablet
 1. If you flashed the tablet (as above) or just unboxed it, you will need to complete the Android setup wizard.
 2. Once your tablet is ready to use, access *Settings* and scroll down to *About tablet* - tap to select.
-3. Scroll down to the bottom again to *Build number*, tap this 7 times to enable Deeloper mode.
+3. Scroll down to the bottom again to *Build number*, tap this 7 times to enable Developer mode.
 4. Return to Settings and choose Developer Options.  Tap to enable USB Debugging.  Press OK to continue.  Press OK to allow connections from your computer.
 5. Tap to disable *Verify apps over USB*.  Press the home button to exit Settings.
 

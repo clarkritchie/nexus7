@@ -130,7 +130,8 @@ def patchTablet( device_id, adb, patch_file ):
 
     cmd='%s -s %s sideload %s' % ( adb, device_id, patch_file )
     print( cmd )
-    subp = subprocess.Popen( [adb,"-s",device_id,"sideload",patch_file], bufsize=4096 )
+    # subp = subprocess.Popen( [adb,"-s",device_id,"sideload",patch_file], bufsize=4096 )
+    subp = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
     stdout, stderr = subp.communicate()
     subp.wait()
     print(stdout.decode())
