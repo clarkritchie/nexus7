@@ -1,13 +1,32 @@
 #!/usr/local/bin/python3
-
 #
-# A simple script to:
-#  - Install a directory worth of APKs onto N-attached Android devices via USB
-#  - Flash N-attached Android devices via USB with unlocked bootloader
+# Author:  Clark Ritchie
+# Date:    December, 2013
+# Repo:    https://github.com/clarkritchie/nexus7
 #
-# Usage:  nexus7parallel.py -- Will install all APKs in the directory path hard coded below
-#         nexus7parallel.py flash -- Will flash using the bootloader and Android OS image hard coded below
+# A simple cross-platform Python script to:
+# - Upgrade and/or Patch N-attached Android tablets connected via a USB hub
+# - Install apps on N-attached Android tablets connected via a USB hub
+# - Copy files onto N-attached Android tablets connected via a USB hub
 #
+# Usage:  python3 n7p.py -h
+#
+# Running n7p.py version 1.3.1
+# usage: n7p.py [-h] [-c CONFIG] [-u] [-p] [-a] [-f]
+#
+# optional arguments:
+#  -h, --help            show this help message and exit
+#  -c CONFIG, --config CONFIG
+#                        Use alternate configuration file (Default: n7.ini)
+#
+# Choose one of the operations below:
+#  -u, --upgrade         Upgrade Android OS on all connected tablets (using
+#                        fastboot)
+#  -p, --patch           Patch Android OS on all connected tablets (using adb
+#                        sideload)
+#  -a, --apps            Install apps on all connected tablets (using adb
+#                        install)
+#  -f, --files           Copy files to all connected tablets (using adb push)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,10 +44,9 @@
 
 import subprocess, sys, re, time, glob, datetime, os, argparse
 # @see http://stackoverflow.com/questions/7207309/python-how-can-i-run-python-functions-in-parallel
-# from multiprocessing import Process
 from multiprocessing import Pool
 
-VERSION=1.3.1
+VERSION="1.3.1"
 CONFIG_FILE = 'n7.ini'
 
 # check if we're on a posix or Windows machine
@@ -192,7 +210,7 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument( '-c', '--config', metavar = 'CONFIG', type = str, help = 'Use alternate configuration file (Default: %s)' % CONFIG_FILE )
-    group = parser.add_argument_group( 'Choose one of three operations below' )
+    group = parser.add_argument_group( 'Choose one of the operations below' )
     
     group.add_argument( '-u', '--upgrade',action='store_true', default=False,help='Upgrade Android OS on all connected tablets (using fastboot)' )
     group.add_argument( '-p', '--patch',action='store_true', default=False,help='Patch Android OS on all connected tablets (using adb sideload)' )

@@ -1,20 +1,26 @@
 
-# Nexus 7 Tablet Deployment Script
+# Nexus 7 Deployment Script
 
 -------------
 
-This Python script was developed for use on a project to deploy 1,200 Google Nexus 7 tablets.  It helps automate the process of upgrading the Android OS, installing apps and copying files onto the tablet.  It uses Python's multiprocessing module and can operate on multiple tablets connected to a computer via a USB hub.  It has been tested on Mac OS/X and Windows 7.
+This Python script was developed for use on a project to deploy 1,200 Google Nexus 7 tablets.  It helps automate the process of upgrading the Android OS, installing apps and copying files onto the tablet.  It uses Python's multiprocessing module and can operate on multiple tablets connected to a computer via a USB hub.  It has been tested with up to 8 tablets connected to host computers running Mac OS/X and Windows 7.
 
 
 *Disclaimer*
 -------------
 Proceed at your own risk!  I take no responsibility if you brick your own tablet.  That said, I've run this many, many, many times on numerous Nexus 7 tablets, and I have not bricked one tablet.
 
+###GNU General Public License
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Background
 Our project had a few specific requirements worth noting, including a) rooting the tablet was not approved, and b) users were not required to have Google accounts to use the tablet.
 
-We received a large shipment of Nexus 7 tablets (2012 Wi-Fi edition, a.k.a. "nakasi") running Android 4.2.  First, we wanted to upgrade them all to run Android 4.4.  Second, we wanted to be able to patch the tablets with what would otherwise be an OTA upgrade (e.g. 4.4.0 to 4.4.2).  Third, we wanted to be able to pre-install a bunch of apps.  Fourth, we wanted the ability to copy a set of files onto the tablet.
+We received a large shipment of Nexus 7 tablets (2012 Wi-Fi edition, a.k.a. "nakasi") running Android 4.2.  First, we wanted to upgrade them all to run Android 4.4.  Second, we wanted to be able to patch the tablets with what would otherwise be an OTA upgrade (e.g. 4.4.0 to 4.4.2).  (We work in very low-bandwidth environments, and even 10 tablets doing an OTA upgrade would swamp our Internet connection.)  Third, we wanted to be able to pre-install a bunch of apps.  Fourth, we wanted the ability to copy a set of files onto the tablet.
 
 Some of of the apps we pre-installed were custom/in-house developed.  Others were free apps available in the Play store.  Because our users were not required to have Google accounts, we found the [APK Extractor](https://play.google.com/store/apps/details?id=net.sylark.apkextractor&hl=en) to be useful to work with this requirement.  On a test tablet, we could login to a Google account, install an app via the Play store, then extract the APK for that app.
 
@@ -23,10 +29,11 @@ At this time, Android does not seem to offer a lot of automation for bulk deploy
 This script can be used 1) to upgrade the Android OS, and 2) install a series apps are available locally on disk as APK files, and 3) copy files onto the tablet.
 
 ### Python 3
-* This script requires Python 3 (Python 3.3.2 at the time of this writing).  The original version of this script was developed using Python 2.7.5.  We switched to Python's multiprocessing capabilities.  It was developed using Python 3.3.2.  With 5 tablets attached via a USB hub, I was able to flash all 5 to Android 4.3 in approximatley 5:38.  Each additional tablet adds around ~30 seconds.
+This script requires Python 3 (Python 3.3.2 at the time of this writing).  The original version of this script was developed using Python 2.7.5, but I switched to Python 3 to better leverage Python's multiprocessing capabilities.
 
 ### Performance
-Below are some runtimes I observed upgrading the Android OS (4.2 to 4.3) on 5 tablets connected via a USB hub to a MacBook Pro (2.9 GHz i7):
+
+Listed below are some runtimes I observed upgrading the Android OS (4.2 to 4.3) on 5 tablets, connected via a 7-port Plugble USB 3.0 hub to my MacBook Pro (2.9 GHz i7 running OS/X 10.9):
 
   * ```./n7p.py completed - 2 tablet(s) in 0:04:00.172587```
 
@@ -35,6 +42,8 @@ Below are some runtimes I observed upgrading the Android OS (4.2 to 4.3) on 5 ta
   * ```./n7p.py completed - 4 tablet(s) in 0:05:01.472792```
 
   * ```./n7p.py completed - 5 tablet(s) in 0:05:38.462541```
+  
+We've run this script with up to 8 tablets connected by a single USB hub.  However, with more and more tablets reading or debugging the script's output can get a little tricky.
 
 ### Platform Compatability
 This script has been run successfully on Mac computers running OS/X 10.8 and 10.9 and a PC running Windows 7 Starter Edition.
