@@ -5,9 +5,9 @@
 
 This Python script was developed for use on a project to deploy 1,200 Google Nexus 7 tablets.  It helps automate the process of upgrading the Android OS, installing apps and copying files onto the tablet.  It uses Python's multiprocessing module and can operate on multiple tablets connected to a computer via a USB hub.  It has been tested with up to 8 tablets connected to host computers running Mac OS/X and Windows 7.
 
+I don't see any reason this script couldn't be used on other Android tablets.  However, I've only got access to the Nexus 7, and I don't know all the magic button sequences for other Android tablets. ;-)
 
-*Disclaimer*
--------------
+###Disclaimer
 Proceed at your own risk!  I take no responsibility if you brick your own tablet.  That said, I've run this many, many, many times on numerous Nexus 7 tablets, and I have not bricked one tablet.
 
 ###GNU General Public License
@@ -51,12 +51,12 @@ This script has been run successfully on Mac computers running OS/X 10.8 and 10.
 ### Setup
 
 1. Install the [Android SDK](http://developer.android.com/sdk/index.html).
-2. Update the paths in the .ini file (n7.ini) -- see Edit Config File below.
+2. Update the paths in the .ini file (n7.ini) -- see *Edit Config* File below.
 3. If upgrading the Android OS, download a [Factory image](https://developers.google.com/android/nexus/images) of Android that is appropriate for your tablet
 4. Install or confirm you are using Python 3 (e.g.  ```python -V``` or maybe ```python3 -V```) should return something that shows the version of Python you are running)
 5. If patching the Android OS, download a .zip file containing the patch -- normally this is available online shortly after an official Android OTA update.
 6. Connect any number of tablets to your computer via a USB hub.
-7. Windows users will probably need to install USB drivers for the Nexus 7.  These can be downloaded from [Google](http://developer.android.com/sdk/win-usb.html) - see also Windows Driver Note below.
+7. Windows users will probably need to install USB drivers for the Nexus 7.  These can be downloaded from [Google](http://developer.android.com/sdk/win-usb.html) - see also *Windows Driver Note* below.
 
 ### Edit Config File
 Edit the included sample config file (n7.ini) to include:
