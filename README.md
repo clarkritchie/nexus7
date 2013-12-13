@@ -1,7 +1,10 @@
-# Nexus 7 Bulk Tablet Deployment Script #
+
+# Nexus 7 Tablet Deployment Script
+
 -------------
 
-This Python script was developed for use on a project to deploy 1,200 Google Nexus 7 tablets.
+This Python script was developed for use on a project to deploy 1,200 Google Nexus 7 tablets.  It helps automate the process of upgrading the Android OS, installing apps and copying files onto the tablet.  It uses Python's multiprocessing module and can operate on multiple tablets connected to a computer via a USB hub.  It has been tested on Mac OS/X and Windows 7.
+
 
 *Disclaimer*
 -------------
@@ -106,6 +109,6 @@ On my Windows computer, Windows seemed to recognize my device -- e.g. low beep/h
 
 ### Use Case 4: Copy Files onto Tablet
 1. Update config file, as appropriate.
-2. Follow steps under Prepare Each Tablet under Use Case 2: Install Apps
+2. Follow steps under Prepare Each Tablet under Use Case 3: Install Apps
 3. Once all your tablets are prepped, run the script with no parameters, e.g. ```./n7p.py -f``` 
 4. Confirm files copied to your tablet using a file manager app or ```adb shell```
