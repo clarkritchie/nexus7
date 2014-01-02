@@ -46,7 +46,7 @@ import subprocess, sys, re, time, glob, datetime, os, argparse
 # @see http://stackoverflow.com/questions/7207309/python-how-can-i-run-python-functions-in-parallel
 from multiprocessing import Pool
 
-VERSION="1.3.1"
+VERSION="1.3.2"
 CONFIG_FILE = 'n7.ini'
 
 # check if we're on a posix or Windows machine
@@ -262,8 +262,12 @@ if __name__ == '__main__':
         apps=True
         cmd=adb + " devices"
         # get all the APKs into a list
-        apks = glob.glob( apk_files+"/*.apk" ) # check case sensitivity, slash compatability
-        print( 'Install apps on attached tablets' )
+        if os.path.exists( apk_files ):
+            apks = glob.glob( apk_files+"/*.apk" ) # check case sensitivity, slash compatability
+            print( 'Install apps on attached tablets' )
+        else:
+            print( 'Error!  APK directory %s does not exist' % apk_files )
+            sys.exit(0)        
     elif output.files:
         files=True
         cmd=adb + " devices"
