@@ -46,7 +46,7 @@ import subprocess, sys, re, time, glob, datetime, os, argparse
 # @see http://stackoverflow.com/questions/7207309/python-how-can-i-run-python-functions-in-parallel
 from multiprocessing import Pool
 
-VERSION="1.3.2"
+VERSION="1.3.3"
 CONFIG_FILE = 'n7.ini'
 
 # check if we're on a posix or Windows machine
