@@ -241,6 +241,31 @@ if __name__ == '__main__':
         file3 = ini['files']['file3'].replace("'", "")
         file4 = ini['files']['file4'].replace("'", "")
         file5 = ini['files']['file5'].replace("'", "")
+        file6 = ini['files']['file6'].replace("'", "")
+        file7 = ini['files']['file7'].replace("'", "")
+        file8 = ini['files']['file8'].replace("'", "")
+        file9 = ini['files']['file9'].replace("'", "")
+        file10 = ini['files']['file10'].replace("'", "")
+        file11 = ini['files']['file11'].replace("'", "")
+        file12 = ini['files']['file12'].replace("'", "")
+        file13 = ini['files']['file13'].replace("'", "")
+        file14 = ini['files']['file14'].replace("'", "")
+        file15 = ini['files']['file15'].replace("'", "")
+        file16 = ini['files']['file16'].replace("'", "")
+        file17 = ini['files']['file17'].replace("'", "")
+        file18 = ini['files']['file18'].replace("'", "")
+        file19 = ini['files']['file19'].replace("'", "")
+        file20 = ini['files']['file20'].replace("'", "")
+        file21 = ini['files']['file21'].replace("'", "")
+        file22 = ini['files']['file22'].replace("'", "")
+        file23 = ini['files']['file23'].replace("'", "")
+        file24 = ini['files']['file24'].replace("'", "")
+        file25 = ini['files']['file25'].replace("'", "")
+        file26 = ini['files']['file26'].replace("'", "")
+        file27 = ini['files']['file27'].replace("'", "")
+        file28 = ini['files']['file28'].replace("'", "")
+        file29 = ini['files']['file29'].replace("'", "")
+        file30 = ini['files']['file30'].replace("'", "")
     else:
         print( 'Error!  Config file %s does not exist' % CONFIG_FILE )
         sys.exit(0)
@@ -304,7 +329,7 @@ if __name__ == '__main__':
     # pool = Pool()
     for device_id in devices:
         if device_id is not None:
-            print ( "Using tablet %s" % device_id)
+            print ( "Using tablet %s" % device_id )
             if upgrade:
                 # no callback, ignoring return codes
                 res = pool.apply_async( upgradeTablet, args = ( device_id, fastboot, bootloader, android_image ))
@@ -316,11 +341,11 @@ if __name__ == '__main__':
             elif apps:
                 res = pool.apply_async( installApps, args = ( device_id, adb, apks, ), callback=checkReturnCode )
             elif files:
-                n = 1
-                # for f in [file1,file2,file3,file4,file5,file6,file7,file8,file9]:
-                for filename in [file1,file2,file3,file4,file5]:
+                # need to revisit this -- what was a quick and dirty fix to push a few files is now hideous
+                for filename in [file1,file2,file3,file4,file5,file6,file7,file8,file9,file10,file11,file12,file13,file14,file15,file16,file17,file18,file19,file20,file21,file22,file23,file24,file25,file26,file27,file28,file29,file30]:
                     f = filename.split(',')[0] # filename
                     p = filename.split(',')[1] # path
+                    # print( '%s : %s %s' % ( n, f, p ))
                     if os.path.isfile(f):
                         copyFiles( device_id, adb, f, p )
             else:
