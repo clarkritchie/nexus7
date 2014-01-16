@@ -11,7 +11,7 @@
 #
 # Usage:  python3 n7p.py -h
 #
-# Running n7p.py version 1.3.1
+# Running n7p.py version 1.3.4
 # usage: n7p.py [-h] [-c CONFIG] [-u] [-p] [-a] [-f]
 #
 # optional arguments:
@@ -27,6 +27,8 @@
 #  -a, --apps            Install apps on all connected tablets (using adb
 #                        install)
 #  -f, --files           Copy files to all connected tablets (using adb push)
+#
+# See n7.ini for an example of a valid configuration file.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -45,53 +47,17 @@
 import subprocess, sys, re, time, glob, datetime, os, argparse
 # @see http://stackoverflow.com/questions/7207309/python-how-can-i-run-python-functions-in-parallel
 from multiprocessing import Pool
-
+import configparser as ConfigParser, ast
+ 
 VERSION="1.3.3"
 CONFIG_FILE = 'n7.ini'
 
 # check if we're on a posix or Windows machine
+# check if we're on a posix or Windows machine
 #posix = 1
 #if ( os.name == "nt"): # not sure what other versions of Windows report here?
 #    posix = 0
-
-# ******************************************************************************
-# Simple configuration file parser, taken from:
-# http://www.decalage.info/en/python/configparser
-# ******************************************************************************
-class ParseINI(dict):
-  def __init__(self, f):
-    self.f = f
-    self.__read()
- 
-  def __read(self):
-    with open(self.f, 'r') as f:
-      slovnik = self
-      for line in f:
-        if not line.startswith("#") and not line.startswith(';') and line.strip() != "":
-          line = line.replace('=', ':')
-          line = line.replace(';', '#')
-          index = line.find('#')
-          line = line[:index]
-          line = line.strip()
-          if line.startswith("["):
-            sections = line[1:-1].split('.')
-            slovnik = self
-            for section in sections:
-              if section not in slovnik:
-                slovnik[section] = {}
-              slovnik = slovnik[section]
-          else:
-            if not self:
-              slovnik['global'] = {}
-              slovnik = slovnik['global']
-            parts = line.split(":", 1)
-            slovnik[parts[0].strip()] = parts[1].strip()
- 
-  def items(self, section):
-    try:
-      return self[section]
-    except KeyError:
-      return []
+    
     
 # ******************************************************************************
 # upgradeTablet
@@ -229,43 +195,26 @@ if __name__ == '__main__':
         # need to check that this file exists, maybe turn it into an argument
         # ini = ParseINI( str(sys.argv[1]) )
         print("Using %s config file" % CONFIG_FILE )
-        ini = ParseINI( CONFIG_FILE )
-        adb = ini['nexus7']['adb'].replace("'", "")
-        fastboot = ini['nexus7']['fastboot'].replace("'", "")
-        apk_files = ini['nexus7']['apk_files'].replace("'", "")
-        android_image = ini['nexus7']['android_image'].replace("'", "")
-        bootloader = ini['nexus7']['bootloader'].replace("'", "")
-        patch_file = ini['nexus7']['patch'].replace("'", "")
-        file1 = ini['files']['file1'].replace("'", "")
-        file2 = ini['files']['file2'].replace("'", "")
-        file3 = ini['files']['file3'].replace("'", "")
-        file4 = ini['files']['file4'].replace("'", "")
-        file5 = ini['files']['file5'].replace("'", "")
-        file6 = ini['files']['file6'].replace("'", "")
-        file7 = ini['files']['file7'].replace("'", "")
-        file8 = ini['files']['file8'].replace("'", "")
-        file9 = ini['files']['file9'].replace("'", "")
-        file10 = ini['files']['file10'].replace("'", "")
-        file11 = ini['files']['file11'].replace("'", "")
-        file12 = ini['files']['file12'].replace("'", "")
-        file13 = ini['files']['file13'].replace("'", "")
-        file14 = ini['files']['file14'].replace("'", "")
-        file15 = ini['files']['file15'].replace("'", "")
-        file16 = ini['files']['file16'].replace("'", "")
-        file17 = ini['files']['file17'].replace("'", "")
-        file18 = ini['files']['file18'].replace("'", "")
-        file19 = ini['files']['file19'].replace("'", "")
-        file20 = ini['files']['file20'].replace("'", "")
-        file21 = ini['files']['file21'].replace("'", "")
-        file22 = ini['files']['file22'].replace("'", "")
-        file23 = ini['files']['file23'].replace("'", "")
-        file24 = ini['files']['file24'].replace("'", "")
-        file25 = ini['files']['file25'].replace("'", "")
-        file26 = ini['files']['file26'].replace("'", "")
-        file27 = ini['files']['file27'].replace("'", "")
-        file28 = ini['files']['file28'].replace("'", "")
-        file29 = ini['files']['file29'].replace("'", "")
-        file30 = ini['files']['file30'].replace("'", "")
+        #ini = ParseINI( CONFIG_FILE )
+        #adb = ini['nexus7']['adb'].replace("'", "")
+        #fastboot = ini['nexus7']['fastboot'].replace("'", "")
+        #apk_files = ini['nexus7']['apk_files'].replace("'", "")
+        #android_image = ini['nexus7']['android_image'].replace("'", "")
+        #bootloader = ini['nexus7']['bootloader'].replace("'", "")
+        #patch_file = ini['nexus7']['patch'].replace("'", "")
+        config = ConfigParser.ConfigParser()
+        config.read( CONFIG_FILE )
+        adb = config.get( 'nexus7', 'adb' )
+        fastboot = config.get( 'nexus7', 'fastboot' )
+        apk_files = config.get( 'nexus7', 'apk_files' )
+        android_image = config.get( 'nexus7', 'android_image' )
+        bootloader = config.get( 'nexus7', 'bootloader' )
+        patch_file = config.get( 'nexus7', 'patch_file' )
+        filesToCopy = ast.literal_eval(config.get('files', 'files'))
+        # print files, type(files)
+        # for k, v in files.iteritems():
+        #    print( '%s -> %s' % (k, v) )
+    
     else:
         print( 'Error!  Config file %s does not exist' % CONFIG_FILE )
         sys.exit(0)
@@ -309,7 +258,8 @@ if __name__ == '__main__':
     print( 'Android bootloader: %s' % bootloader )
     print( 'Android patch: %s' % patch_file )
     print( '***************************************************************\n' )
-
+    # sys.exit(0)
+    
     # get a list of device IDs for all attached tablets
     devices = []
     p = subprocess.Popen( cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -342,11 +292,11 @@ if __name__ == '__main__':
                 res = pool.apply_async( installApps, args = ( device_id, adb, apks, ), callback=checkReturnCode )
             elif files:
                 # need to revisit this -- what was a quick and dirty fix to push a few files is now hideous
-                for filename in [file1,file2,file3,file4,file5,file6,file7,file8,file9,file10,file11,file12,file13,file14,file15,file16,file17,file18,file19,file20,file21,file22,file23,file24,file25,file26,file27,file28,file29,file30]:
-                    f = filename.split(',')[0] # filename
-                    p = filename.split(',')[1] # path
-                    # print( '%s : %s %s' % ( n, f, p ))
-                    if os.path.isfile(f):
+                for f in filesToCopy.keys():
+                    f = str(f) # ensure it's a string
+                    p = str(filesToCopy[f]) # grab the corresponding path, ensure its a string
+                    print( '%s --> %s' % ( f, p ))
+                    if os.path.isfile( f ):
                         copyFiles( device_id, adb, f, p )
             else:
                 print( '\r\nNothing to do!\r\n' )

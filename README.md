@@ -7,6 +7,8 @@ This Python script was developed for use on a project to deploy 1,200 Google Nex
 
 I don't see any reason this script couldn't be used on other Android tablets.  However, I've only got access to the Nexus 7, and I don't know all the magic button sequences for other Android tablets. ;-)
 
+Actually that's not true -- I was able to test the app and file installation options on a Samsung Galaxy Tab 2, and both worked fine.
+
 ###Disclaimer
 Proceed at your own risk!  I take no responsibility if you brick your own tablet.  That said, I've run this many, many, many times on numerous Nexus 7 tablets, and I have not bricked one tablet.
 
@@ -73,7 +75,7 @@ Edit the included sample config file (n7.ini) to include:
   
   * Path to your directory of APK files
   
-  * Up to 5 files to copy onto the tablet and their target destination (path) on the tablet
+  * Listing of files to push onto the tablet in the form of source-destination, can be of variable length
   
 If no configuration file is specified, the script assumes a file named ```n7.ini``` is in the same directory as the script itself.  An alternate configuration file can be specified using the "-c" parameter, e.g.  ```./n7p.py -c OTHERFILE``` - where OTHERFILE is a file in the same structure as the included n7.ini.
 
