@@ -3,7 +3,7 @@
 
 -------------
 
-This Python script was developed for use on a project to deploy 1,200 Google Nexus 7 tablets.  It helps automate the process of upgrading the Android OS, installing apps and copying files onto the tablet.  It uses Python's multiprocessing module and can operate on multiple tablets connected to a computer via a USB hub.  It has been tested with up to 8 tablets connected to host computers running Mac OS/X and Windows 7.
+This Python script was developed for use by Inveneo, a US 501(c)3 non-profit that specializes in ICT projects, for use on a project to deploy 1,200 Google Nexus 7 tablets.  It helps automate the process of upgrading the Android OS, installing apps and copying files onto the tablet.  It uses Python's multiprocessing module and can operate on multiple tablets connected to a computer via a USB hub.  It has been tested with up to 8 tablets connected to host computers running Mac OS/X and Windows 7.
 
 I don't see any reason this script couldn't be used on other Android tablets.  However, I've only got access to the Nexus 7, and I don't know all the magic button sequences for other Android tablets. ;-)
 
